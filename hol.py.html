@@ -1,0 +1,174 @@
+<html>
+<head>
+<title>hol.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+hol.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span>
+<span class="s0">from </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector </span><span class="s0">import </span><span class="s1">errorcode</span>
+
+
+<span class="s3"># Establecemos la conexión con el servidor MySQL</span>
+<span class="s0">def </span><span class="s1">conectar</span><span class="s2">():</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">conn </span><span class="s2">= </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">connect</span><span class="s2">(</span>
+            <span class="s1">host</span><span class="s2">=</span><span class="s4">&quot;localhost&quot;</span><span class="s2">,  </span><span class="s3"># Dirección del servidor MySQL</span>
+            <span class="s1">user</span><span class="s2">=</span><span class="s4">&quot;root&quot;</span><span class="s2">,  </span><span class="s3"># Usuario de MySQL</span>
+            <span class="s1">password</span><span class="s2">=</span><span class="s4">&quot;tu_contraseña&quot;  </span><span class="s3"># Contraseña de MySQL</span>
+        <span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">conn</span>
+    <span class="s0">except </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">Error </span><span class="s0">as </span><span class="s1">err</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Error: </span><span class="s0">{</span><span class="s1">err</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+        <span class="s0">return None</span>
+
+
+<span class="s3"># Crear base de datos</span>
+<span class="s0">def </span><span class="s1">crear_base_datos</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s4">&quot;CREATE DATABASE IF NOT EXISTS tienda&quot;</span><span class="s2">)</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Base de datos 'tienda' creada correctamente.&quot;</span><span class="s2">)</span>
+    <span class="s0">except </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">Error </span><span class="s0">as </span><span class="s1">err</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Error al crear la base de datos: </span><span class="s0">{</span><span class="s1">err</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Conectar a la base de datos 'tienda'</span>
+<span class="s0">def </span><span class="s1">conectar_a_base_datos</span><span class="s2">():</span>
+    <span class="s1">conn </span><span class="s2">= </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">connect</span><span class="s2">(</span>
+        <span class="s1">host</span><span class="s2">=</span><span class="s4">&quot;localhost&quot;</span><span class="s2">,</span>
+        <span class="s1">user</span><span class="s2">=</span><span class="s4">&quot;root&quot;</span><span class="s2">,</span>
+        <span class="s1">password</span><span class="s2">=</span><span class="s4">&quot;tu_contraseña&quot;</span><span class="s2">,</span>
+        <span class="s1">database</span><span class="s2">=</span><span class="s4">&quot;tienda&quot;</span>
+    <span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">conn</span>
+
+
+<span class="s3"># Crear la tabla 'clientes'</span>
+<span class="s0">def </span><span class="s1">crear_tabla</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s1">tabla_clientes </span><span class="s2">= </span><span class="s4">''' 
+    CREATE TABLE IF NOT EXISTS clientes ( 
+        id INT AUTO_INCREMENT PRIMARY KEY, 
+        nombre VARCHAR(100), 
+        contacto VARCHAR(100), 
+        historial_compras TEXT, 
+        preferencias TEXT, 
+        fecha_ultima_compra DATE, 
+        inactivo BOOLEAN DEFAULT 0 
+    ) 
+    '''</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s1">tabla_clientes</span><span class="s2">)</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Tabla 'clientes' creada correctamente.&quot;</span><span class="s2">)</span>
+    <span class="s0">except </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">Error </span><span class="s0">as </span><span class="s1">err</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Error al crear la tabla: </span><span class="s0">{</span><span class="s1">err</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Agregar un cliente</span>
+<span class="s0">def </span><span class="s1">agregar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s1">nombre</span><span class="s2">, </span><span class="s1">contacto</span><span class="s2">, </span><span class="s1">historial_compras</span><span class="s2">, </span><span class="s1">preferencias</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s1">consulta </span><span class="s2">= </span><span class="s4">''' 
+    INSERT INTO clientes (nombre, contacto, historial_compras, preferencias, fecha_ultima_compra) 
+    VALUES (%s, %s, %s, %s, NOW()) 
+    '''</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s1">consulta</span><span class="s2">, (</span><span class="s1">nombre</span><span class="s2">, </span><span class="s1">contacto</span><span class="s2">, </span><span class="s1">historial_compras</span><span class="s2">, </span><span class="s1">preferencias</span><span class="s2">))</span>
+        <span class="s1">conn</span><span class="s2">.</span><span class="s1">commit</span><span class="s2">()</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;Cliente agregado correctamente.&quot;</span><span class="s2">)</span>
+    <span class="s0">except </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">connector</span><span class="s2">.</span><span class="s1">Error </span><span class="s0">as </span><span class="s1">err</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Error al agregar el cliente: </span><span class="s0">{</span><span class="s1">err</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Actualizar datos de un cliente</span>
+<span class="s0">def </span><span class="s1">actualizar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s1">id_cliente</span><span class="s2">, </span><span class="s1">nombre</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">contacto</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s0">if </span><span class="s1">nombre</span><span class="s2">:</span>
+        <span class="s1">consulta </span><span class="s2">= </span><span class="s4">&quot;UPDATE clientes SET nombre = %s WHERE id = %s&quot;</span>
+        <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s1">consulta</span><span class="s2">, (</span><span class="s1">nombre</span><span class="s2">, </span><span class="s1">id_cliente</span><span class="s2">))</span>
+    <span class="s0">if </span><span class="s1">contacto</span><span class="s2">:</span>
+        <span class="s1">consulta </span><span class="s2">= </span><span class="s4">&quot;UPDATE clientes SET contacto = %s WHERE id = %s&quot;</span>
+        <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s1">consulta</span><span class="s2">, (</span><span class="s1">contacto</span><span class="s2">, </span><span class="s1">id_cliente</span><span class="s2">))</span>
+
+    <span class="s1">conn</span><span class="s2">.</span><span class="s1">commit</span><span class="s2">()</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Cliente con ID </span><span class="s0">{</span><span class="s1">id_cliente</span><span class="s0">} </span><span class="s4">actualizado correctamente.&quot;</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Eliminar un cliente</span>
+<span class="s0">def </span><span class="s1">eliminar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s1">id_cliente</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s1">consulta </span><span class="s2">= </span><span class="s4">&quot;DELETE FROM clientes WHERE id = %s&quot;</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s1">consulta</span><span class="s2">, (</span><span class="s1">id_cliente</span><span class="s2">,))</span>
+    <span class="s1">conn</span><span class="s2">.</span><span class="s1">commit</span><span class="s2">()</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">f&quot;Cliente con ID </span><span class="s0">{</span><span class="s1">id_cliente</span><span class="s0">} </span><span class="s4">eliminado correctamente.&quot;</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Consultar clientes</span>
+<span class="s0">def </span><span class="s1">consultar_clientes</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">):</span>
+    <span class="s1">cursor </span><span class="s2">= </span><span class="s1">conn</span><span class="s2">.</span><span class="s1">cursor</span><span class="s2">()</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">execute</span><span class="s2">(</span><span class="s4">&quot;SELECT * FROM clientes&quot;</span><span class="s2">)</span>
+    <span class="s1">clientes </span><span class="s2">= </span><span class="s1">cursor</span><span class="s2">.</span><span class="s1">fetchall</span><span class="s2">()</span>
+    <span class="s0">for </span><span class="s1">cliente </span><span class="s0">in </span><span class="s1">clientes</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s1">cliente</span><span class="s2">)</span>
+    <span class="s1">cursor</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+
+<span class="s3"># Ejecución del sistema</span>
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s4">&quot;__main__&quot;</span><span class="s2">:</span>
+    <span class="s3"># Conexión inicial para crear la base de datos</span>
+    <span class="s1">conn </span><span class="s2">= </span><span class="s1">conectar</span><span class="s2">()</span>
+    <span class="s0">if </span><span class="s1">conn</span><span class="s2">:</span>
+        <span class="s1">crear_base_datos</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">)</span>
+        <span class="s1">conn</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()  </span><span class="s3"># Cerrar la conexión después de crear la base de datos</span>
+
+    <span class="s3"># Ahora conectamos a la base de datos 'tienda'</span>
+    <span class="s1">conn </span><span class="s2">= </span><span class="s1">conectar_a_base_datos</span><span class="s2">()</span>
+
+    <span class="s3"># Crear tabla 'clientes'</span>
+    <span class="s1">crear_tabla</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">)</span>
+
+    <span class="s3"># Agregar clientes</span>
+    <span class="s1">agregar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s4">&quot;Juan Pérez&quot;</span><span class="s2">, </span><span class="s4">&quot;juan@example.com&quot;</span><span class="s2">, </span><span class="s4">&quot;Compra repetida de producto A&quot;</span><span class="s2">, </span><span class="s4">&quot;Electrónica&quot;</span><span class="s2">)</span>
+    <span class="s1">agregar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s4">&quot;María López&quot;</span><span class="s2">, </span><span class="s4">&quot;maria@example.com&quot;</span><span class="s2">, </span><span class="s4">&quot;Compra única&quot;</span><span class="s2">, </span><span class="s4">&quot;Ropa&quot;</span><span class="s2">)</span>
+
+    <span class="s3"># Consultar clientes</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">--- Clientes registrados ---&quot;</span><span class="s2">)</span>
+    <span class="s1">consultar_clientes</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">)</span>
+
+    <span class="s3"># Actualizar un cliente</span>
+    <span class="s1">actualizar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s1">nombre</span><span class="s2">=</span><span class="s4">&quot;Juan Pérez Gómez&quot;</span><span class="s2">, </span><span class="s1">contacto</span><span class="s2">=</span><span class="s4">&quot;juan.perez@nuevoemail.com&quot;</span><span class="s2">)</span>
+
+    <span class="s3"># Consultar clientes después de la actualización</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">--- Clientes después de la actualización ---&quot;</span><span class="s2">)</span>
+    <span class="s1">consultar_clientes</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">)</span>
+
+    <span class="s3"># Eliminar un cliente</span>
+    <span class="s1">eliminar_cliente</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">, </span><span class="s5">2</span><span class="s2">)</span>
+
+    <span class="s3"># Consultar clientes después de la eliminación</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">--- Clientes después de la eliminación ---&quot;</span><span class="s2">)</span>
+    <span class="s1">consultar_clientes</span><span class="s2">(</span><span class="s1">conn</span><span class="s2">)</span>
+
+    <span class="s3"># Cerrar la conexión a la base de datos</span>
+    <span class="s1">conn</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+</pre>
+</body>
+</html>
